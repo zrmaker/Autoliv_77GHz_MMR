@@ -1,0 +1,7 @@
+<launch>
+    <group>
+	<node pkg = "autoliv" type = "autoliv_node" name  = "" />
+	<node pkg = "ros2can_util" type = "can2ros.py" name = "" />
+    <node pkg = "ros2can_util" type = "ros2can.py" name = "" />
+    </group>
+</launch>
