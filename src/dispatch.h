@@ -23,6 +23,8 @@ enum
   MODE_BLIND                  = 5    
 };
 
+// Big-endian
+
 typedef struct
 {
   uint8_t sensor_2_mode : 4;
@@ -104,8 +106,6 @@ typedef struct
   uint8_t : 8;
   uint8_t : 8;
 } MsgDetectionCount;  // 0x3FF
-
-
 
 }
 #endif 

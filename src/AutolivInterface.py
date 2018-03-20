@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 # created by Fuheng Deng on 10/26/2017
+# updated by Renyuan Zhang on 3/19/2018
 
 import rospy
-from autoliv.msg import TargetCartesianLong
+from autoliv.msg import Targets
 from visualization_msgs.msg import Marker
 #import visualization_msgs.msg import MarkerArray
 #from dynamic_reconfigure.server import Server
@@ -10,9 +11,9 @@ from visualization_msgs.msg import Marker
 
 class AutolivInterface:
     def __init__(self):
-        self.frame_id = rospy.get_param('~frame_id','laser')
-	self.sub_radar_track = rospy.Subscriber('TargetCartesianLong', TargetCartesianLong, self.recv_radar_track)
-	self.pub_radar_marker = rospy.Publisher('Autoliv_Marker', Marker, queue_size=1)
+        self.frame_id = 'autoliv'
+	self.sub_radar_track = rospy.Subscriber('/autoliv/targets', Targets, self.recv_radar_track)
+	self.pub_radar_marker = rospy.Publisher('/autoliv/marker', Marker, queue_size=10)
     
     def recv_radar_track(self, track):
 	marker = Marker()
@@ -20,11 +21,11 @@ class AutolivInterface:
 	marker.header.stamp = rospy.Time.now()
 	marker.id = track.track_id
 	marker.action = Marker.ADD
-	marker.lifetime = rospy.Duration(1.5)
+	marker.lifetime = rospy.Duration(.04)
 	marker.type = Marker.SHPERE
 	
-	marker.pose.position.x = track.distance_x
-	marker.pose.position.y = track.distance_y
+	marker.pose.position.x = x
+	marker.pose.position.y = y
 	marker.pose.position.z = 0	
 
 	marker.scale.x = 1
@@ -39,6 +40,6 @@ class AutolivInterface:
 
 if __name__ == "__main__":
     rospy.init_node('autoliv_radar_interface')
-    _ = AutolivInterface()
+    AutolivInterface()
     rospy.spin()
 

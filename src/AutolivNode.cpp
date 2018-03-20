@@ -43,7 +43,7 @@ void AutolivNode::communication_cycle(const ros::TimerEvent& e){
     send_sync(MODE_LONG);
     for(int i = 1; i <= 4; ++i){
         ros::Duration(.00024).sleep();
-        send_command(i, sync_msg);
+        send_command(i);
         if(msg_counter_cnt++ > 15) msg_counter_cnt = 0;
     }
     
@@ -82,7 +82,6 @@ void AutolivNode::send_command(int sensor_nr){
     memset(ptr, 0x00, sizeof(*ptr));
 
     ptr->msg_counter = msg_counter_cnt;
-    ptr->msg_counter = 0;
     ptr->meas_page_select = 2;
     ptr->data_channel_1_msb = 0;
     ptr->data_channel_1_lsb = 0;
@@ -118,7 +117,7 @@ void AutolivNode::target_parser(const dataspeed_can_msgs::CanMessageStamped::Con
     double vy = velocity * std::cos(bearing * M_PI / 180);
 
     autoliv::Targets pub_;
-    pub_.header.frame_id = "base_link";
+    pub_.header.frame_id = "autoliv";
     pub_.header.stamp = ros::Time::now();
     pub_.target_id = msg->msg.id - CAN_ID_TARGET_STARTER;
     pub_.x = x;
@@ -140,7 +139,7 @@ void AutolivNode::diagnostic_parser(const dataspeed_can_msgs::CanMessageStamped:
     uint16_t diag_code = ((uint16_t)ptr->diag_code_msb << 8) | ptr->diag_code_lsb;
 
     autoliv::Diagnostics pub_;
-    pub_.header.frame_id = "base_link";
+    pub_.header.frame_id = "autoliv";
     pub_.header.stamp = ros::Time::now();
     pub_.fault = diag_code < 1000 ? 1 : 0;
     pub_diagnostics_.publish(pub_);
@@ -152,7 +151,7 @@ void AutolivNode::versions_parser(const dataspeed_can_msgs::CanMessageStamped::C
     uint32_t hw_version = ((uint32_t)ptr->hw_1 << 16) | ((uint32_t)ptr->hw_2 << 8) | (uint32_t)ptr->hw_3;
 
     autoliv::Versions pub_;
-    pub_.header.frame_id = "base_link";
+    pub_.header.frame_id = "autoliv";
     pub_.header.stamp = ros::Time::now();
     pub_.software_version = sw_version;
     pub_.software_subversion = ptr->sub;

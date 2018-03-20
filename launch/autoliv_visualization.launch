@@ -1,0 +1,3 @@
+<launch>
+    <node pkg="autoliv" name="autoliv_visualization_node" type="AutolivInterface.py"/>
+</launch>
