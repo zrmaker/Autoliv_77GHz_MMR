@@ -1,7 +1,7 @@
+// Author: Renyuan Zhang & Fuheng Deng
+// Rewrite the driver according to new documentation of 77GHz
+
 #include "AutolivNode.h"
-#include <string>
-#include <math.h>
-#include <cmath>
 
 namespace octopus
 {
@@ -17,15 +17,14 @@ uint8_t inline crc8(MsgSync *ptr){
 }
 
 AutolivNode::AutolivNode(ros::NodeHandle &node, ros::NodeHandle &priv_nh){
-    
-    sub_can_ = node.subscribe("/can_rx", 100, &AutolivNode::receive_parser, this);
-    pub_targets_ = node.advertise<autoliv::Targets>("/autoliv/targets", 100);
-    pub_versions_ = node.advertise<autoliv::Versions>("/autoliv/versions", 100);
-    pub_diagnostics_ = node.advertise<autoliv::Diagnostics>("/autoliv/diagnostics", 100);
-    pub_can_ = node.advertise<dataspeed_can_msgs::CanMessage>("/can_tx", 100);
-
+    sub_can_ = node.subscribe("/can_rx", 10, &AutolivNode::receive_parser, this);
+    pub_targets_ = node.advertise<autoliv::Targets>("/autoliv/targets", 10);
+    pub_versions_ = node.advertise<autoliv::Versions>("/autoliv/versions", 10);
+    pub_diagnostics_ = node.advertise<autoliv::Diagnostics>("/autoliv/diagnostics", 10);
+    pub_rviz_autoliv_ = node.advertise<visualization_msgs::Marker>("/autoliv/markers", 1);
+    pub_can_ = node.advertise<dataspeed_can_msgs::CanMessage>("/can_tx", 10);
     reset();
-    msg_timer = node.createTimer(ros::Duration(.04), &AutolivNode::communication_cycle, this);
+    msg_timer = node.createTimer(ros::Duration(CYCLE_TIME), &AutolivNode::communication_cycle, this);
 }
 
 AutolivNode::~AutolivNode(){}
@@ -36,7 +35,6 @@ void AutolivNode::reset(){
         send_sync(MODE_RESET);
         msg_counter_cnt++;
     }
-    // ROS_ERROR("FINISH SENDING THE RESET!");
 }
  
 void AutolivNode::communication_cycle(const ros::TimerEvent& e){
@@ -46,22 +44,19 @@ void AutolivNode::communication_cycle(const ros::TimerEvent& e){
         send_command(i);
         if(msg_counter_cnt++ > 15) msg_counter_cnt = 0;
     }
-    
 }
 
-void AutolivNode::send_sync(int mode){
+void AutolivNode::send_sync(uint8_t mode){
     dataspeed_can_msgs::CanMessage out;
     out.id = CAN_ID_SYNC;
     out.extended = false;
     out.dlc = 8;
-
     MsgSync *ptr = (MsgSync*)out.data.elems;
     memset(ptr, 0x00, sizeof(*ptr));
-
-    ptr->sensor_1_mode = (uint8_t)mode;
-    ptr->sensor_2_mode = (uint8_t)mode;
-    ptr->sensor_3_mode = (uint8_t)mode;
-    ptr->sensor_4_mode = (uint8_t)mode;
+    ptr->sensor_1_mode = mode;
+    ptr->sensor_2_mode = mode;
+    ptr->sensor_3_mode = mode;
+    ptr->sensor_4_mode = mode;
     ptr->msg_counter = msg_counter_cnt;
     ptr->data_channel_msb = 0x00;
     ptr->data_channel_lsb = 0x01;
@@ -73,14 +68,13 @@ void AutolivNode::send_sync(int mode){
     crc = crc8(ptr);
 }
 
-void AutolivNode::send_command(int sensor_nr){
+void AutolivNode::send_command(uint8_t sensor_nr){
     dataspeed_can_msgs::CanMessage out;
     out.id = CAN_ID_COMMAND_SENSOR_N + sensor_nr;
     out.extended = false;
     out.dlc = 7;
     MsgCommand *ptr = (MsgCommand*)out.data.elems;
     memset(ptr, 0x00, sizeof(*ptr));
-
     ptr->msg_counter = msg_counter_cnt;
     ptr->meas_page_select = 2;
     ptr->data_channel_1_msb = 0;
@@ -130,6 +124,7 @@ void AutolivNode::target_parser(const dataspeed_can_msgs::CanMessageStamped::Con
     pub_.snr = snr;
     pub_.flags = ptr->flags;
     pub_targets_.publish(pub_);
+    visualize(pub_);
 }
 
 void AutolivNode::diagnostic_parser(const dataspeed_can_msgs::CanMessageStamped::ConstPtr &msg){
@@ -164,4 +159,33 @@ uint16_t AutolivNode::detections_count_parser(const dataspeed_can_msgs::CanMessa
     return ((uint16_t)ptr->valid_detections_msb << 8) | ptr->valid_detections_lsb;
 }
 
+void AutolivNode::visualize(const autoliv::Targets &msg){
+    visualization_msgs::Marker marker;
+
+    marker.header.frame_id = "autoliv";
+    marker.header.stamp = ros::Time::now();
+    marker.id = msg.target_id;
+    marker.type = visualization_msgs::Marker::SPHERE;
+    marker.lifetime = ros::Duration(CYCLE_TIME);
+    marker.action = marker.ADD;
+    marker.color.r = 1;
+    marker.color.g = 255;
+    marker.color.b = 255;
+    marker.color.a = 1;
+
+    marker.pose.position.x = msg.x;
+    marker.pose.position.y = msg.y;
+    marker.pose.position.z = 0;
+
+    marker.pose.orientation.x = 0;
+    marker.pose.orientation.y = 0;
+    marker.pose.orientation.z = 0;
+    marker.pose.orientation.w = 0;
+
+    marker.scale.x = 2;
+    marker.scale.y = 2;
+    marker.scale.z = 2;
+
+    pub_rviz_autoliv_.publish(marker);
+}
 }
