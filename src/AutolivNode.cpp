@@ -168,10 +168,6 @@ void AutolivNode::visualize(const autoliv::Targets &msg){
     marker.type = visualization_msgs::Marker::SPHERE;
     marker.lifetime = ros::Duration(CYCLE_TIME);
     marker.action = marker.ADD;
-    marker.color.r = 1;
-    marker.color.g = 255;
-    marker.color.b = 255;
-    marker.color.a = 1;
 
     marker.pose.position.x = msg.x;
     marker.pose.position.y = msg.y;
@@ -185,7 +181,17 @@ void AutolivNode::visualize(const autoliv::Targets &msg){
     marker.scale.x = 2;
     marker.scale.y = 2;
     marker.scale.z = 2;
-
+    
+    marker.color.a = 1;
+    if (msg.flags == 1) {
+        marker.color.r = 255;
+        marker.color.g = 255;
+        marker.color.b = 1;
+    } else {
+        marker.color.r = 255;
+        marker.color.g = 1;
+        marker.color.b = 1;
+    }    
     pub_rviz_autoliv_.publish(marker);
 }
 }
