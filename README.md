@@ -1,3 +1,5 @@
+[img]: ./data/snr.png
+
 # Autoliv 77GHz Multi-Mode Radar (MMR) Driver
 ### &copy; Renyuan (Leo) Zhang and Fuheng Deng @ TuSimple
 
@@ -15,7 +17,6 @@ __List of ROS message:__
 /autoliv/markers        # markers for visualization
 /autoliv/targets        # target information
 /autoliv/versions       # versions of radar
-
 ```
 
 __Example */autoliv/targets* message:__
@@ -37,6 +38,12 @@ bearing: -23.0767822266         # radar measure tareget bearing in degrees (left
 snr: 6.21557760239              # signal-to-noise ratio of the target
 flags: 1                        # flag: 0 - short range radar; 1 - mid range radar; 2 - moving target indication
 ```
+
+The SNR plot can be seen below:
+
+![alt text][img]
+
+The accurate max range is about 60 meters and the FOV is about 80°.
 
 The filtering algorithm is implemented separately in another repo [radar-tool](https://github.com/TuSimple/radar-tool). 
 
