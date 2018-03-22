@@ -188,8 +188,8 @@ void AutolivNode::visualize(const autoliv::Targets &msg){
         marker.color.g = 255;
         marker.color.b = 1;
     } else {
-        marker.color.r = 255;
-        marker.color.g = 1;
+        marker.color.r = 1;
+        marker.color.g = 255;
         marker.color.b = 1;
     }    
     pub_rviz_autoliv_.publish(marker);
